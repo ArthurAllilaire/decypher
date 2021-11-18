@@ -1,6 +1,7 @@
 import string
 import statistics
-from cypher import letter_freq, get_freq_vals, 
+from cypher import letter_freq, get_freq_vals
+from collections import Counter
 
 def caeser_shift(text, shift):
     """ For every letter  """
@@ -51,13 +52,15 @@ def get_shift(letter1, letter2):
 
 
 def get_modal_shift(letters, letter_freq=letter_freq):
+    """ Returns a tuple (modal shift, certainity) where certainity = number of mode/number of shifts (decimal percentage of prevalance of modal shift) """
     shift = []
     for i in range(len(letters)):
         shift.append(get_shift(letters[i], letter_freq[i]))
 
-    print(shift)
+    mode = Counter(shift).most_common(1)[0]
+    print(mode)
 
-    return round(statistics.mode(shift))
+    return (mode[0], mode[1]/len(shift))
 
 
 def FQ_ceaser(text, letter_freq="etaoinshrdlucwmfygpbvkxjqz"):
@@ -74,7 +77,6 @@ def FQ_ceaser(text, letter_freq="etaoinshrdlucwmfygpbvkxjqz"):
                 alphabet.remove(char.lower())
             # The last one left is the last letter
             FQ_List.append(alphabet[0])
-            print(alphabet)
         else:
             # If there are more than 1 cut letter_freq by the amount of missing letters (shift the letters that are compared so its the 6 least frequent letters that appear rather than overall).
             letter_freq = letter_freq[:-letters_missing]
@@ -84,6 +86,15 @@ def FQ_ceaser(text, letter_freq="etaoinshrdlucwmfygpbvkxjqz"):
     # Get the bottom 6 letters of the FQ
     bottom_letters = FQ_List[-5:]
     # Get the modal shift for the 5 most frequent and 6 least frequent letters
-    shift = get_modal_shift(
+    shift, certainity = get_modal_shift(
         top_letters+bottom_letters, letter_freq[:5]+letter_freq[-5:])
-    return shift
+    return shift, certainity
+
+
+if __name__ == "__main__":
+    # print(caeser_shift(text, 5))
+    #brute_force_ceaser(text, 10)
+    with open("decypher/cypher_messages/mission_briefing.txt", "r") as f:
+        text = f.read()
+        print(FQ_ceaser(text))
+    # plot_freq_vals(text)
