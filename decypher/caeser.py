@@ -1,7 +1,7 @@
 import string
-import statistics
 from cypher import letter_freq, get_freq_vals
 from collections import Counter
+import enchant
 
 def caeser_shift(text, shift):
     """ For every letter  """
@@ -29,7 +29,7 @@ def find_nth(haystack, needle, n):
     return start
 
 
-def brute_force_ceaser(text, num_words=0):
+def brute_force_ceaser(text, num_words=0, print=False):
     """ Takes in the text that has been encrypted with a ceaser shift, returns both the decrytpted text and ceaser shift. Can specify a number of words to take to iterate over instaed of the default first sentence. """
     # Lets use only the first sentence
     if not num_words:
@@ -40,7 +40,29 @@ def brute_force_ceaser(text, num_words=0):
 
     for i in range(26):
         decrypted = caeser_shift(sentence, i)
-        print(decrypted, i)
+        if print:
+            print(decrypted, i)
+        english = check_english(decrypted)
+        if english[0]:
+            return i, english[1]
+    
+    #No caeser shift works
+    return False, 1
+        
+def check_english(text, lang="en"):
+    """Returns a value for wether the text inputted is english. Given by """
+    d = enchant.Dict(lang)
+    words = text.split(" ")
+    for i in range(len(words)):
+        words[i] = d.check(words[i])
+    count = Counter(words)
+    english = count[1]/len(words)
+    if english > 0.5:
+        return True, english
+    else:
+        return False, 1-english
+    
+
 
 def get_shift(letter1, letter2):
     shift = ord(letter2.lower()) - ord(letter1.lower())
@@ -63,8 +85,8 @@ def get_modal_shift(letters, letter_freq=letter_freq):
     return (mode[0], mode[1]/len(shift))
 
 
-def FQ_ceaser(text, letter_freq="etaoinshrdlucwmfygpbvkxjqz"):
-    """TAkes the text that has been shifted. Calls the frequency_analysis and from the top 5 letters figures out the most likely shift."""
+def FQ_ceaser(text, letter_freq=letter_freq):
+    """Takes the text that has been shifted. Calls the frequency_analysis and from the top 5 letters figures out the most likely shift."""
     # Get the frequency dict
     FQ_List = list(get_freq_vals(text))
     letters_missing = 26-len(FQ_List)
@@ -91,10 +113,11 @@ def FQ_ceaser(text, letter_freq="etaoinshrdlucwmfygpbvkxjqz"):
     return shift, certainity
 
 
+
 if __name__ == "__main__":
     # print(caeser_shift(text, 5))
-    #brute_force_ceaser(text, 10)
     with open("decypher/cypher_messages/mission_briefing.txt", "r") as f:
         text = f.read()
-        print(FQ_ceaser(text))
+        print(brute_force_ceaser(text))
+        # print(FQ_ceaser(text))
     # plot_freq_vals(text)

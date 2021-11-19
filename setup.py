@@ -7,7 +7,7 @@ setup(
     # long_description=README,
     author='Arthur Allilaire',
     license='MIT',
-    install_requires=['matplotlib'],
+    install_requires=['matplotlib', 'pyenchant'],
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
     test_suite='tests',
