@@ -1,3 +1,4 @@
+import time
 import string
 from cypher import letter_freq, get_freq_vals
 from collections import Counter
@@ -29,8 +30,8 @@ def find_nth(haystack, needle, n):
     return start
 
 
-def brute_force_ceaser(text, num_words=0, print=False):
-    """ Takes in the text that has been encrypted with a ceaser shift, returns both the decrytpted text and ceaser shift. Can specify a number of words to take to iterate over instaed of the default first sentence. """
+def brute_force_caeser(text, num_words=0, print=False):
+    """ Takes in the text that has been encrypted with a caeser shift, returns both the decrytpted text and caeser shift. Can specify a number of words to take to iterate over instaed of the default first sentence. """
     # Lets use only the first sentence
     if not num_words:
         # Slice the string to get the first sentence
@@ -57,7 +58,7 @@ def check_english(text, lang="en"):
         words[i] = d.check(words[i])
     count = Counter(words)
     english = count[1]/len(words)
-    if english > 0.5:
+    if english > 0.7:
         return True, english
     else:
         return False, 1-english
@@ -80,12 +81,12 @@ def get_modal_shift(letters, letter_freq=letter_freq):
         shift.append(get_shift(letters[i], letter_freq[i]))
 
     mode = Counter(shift).most_common(1)[0]
-    print(mode)
+    print("MODAL SHIFT:", (mode[0], mode[1]/len(shift)), shift)
 
     return (mode[0], mode[1]/len(shift))
 
 
-def FQ_ceaser(text, letter_freq=letter_freq):
+def FQ_caeser(text, letter_freq=letter_freq):
     """Takes the text that has been shifted. Calls the frequency_analysis and from the top 5 letters figures out the most likely shift."""
     # Get the frequency dict
     FQ_List = list(get_freq_vals(text))
@@ -110,7 +111,17 @@ def FQ_ceaser(text, letter_freq=letter_freq):
     # Get the modal shift for the 5 most frequent and 6 least frequent letters
     shift, certainity = get_modal_shift(
         top_letters+bottom_letters, letter_freq[:5]+letter_freq[-5:])
-    return shift, certainity
+    # Need at least a couple repeating values 
+    if certainity > 0.2:
+        # Take first 40 words to check if they are english
+        decrypted = caeser_shift(text[0:find_nth(text, " ", 20)], shift)
+        english, certainity_en = check_english(decrypted)
+    if english:
+        return shift, certainity_en
+    
+    #No caeser shift works
+    return False, 1
+    
 
 
 
@@ -118,6 +129,15 @@ if __name__ == "__main__":
     # print(caeser_shift(text, 5))
     with open("decypher/cypher_messages/mission_briefing.txt", "r") as f:
         text = f.read()
-        print(brute_force_ceaser(text))
-        # print(FQ_ceaser(text))
+        #start_time = time.time()
+        shift, certainity = FQ_caeser(text)
+        #print(f'--- {(time.time() - start_time)} seconds ---')
+        #print(shift, certainity)
+        if shift and certainity > 0.7:
+            print(caeser_shift(text, shift))
+        else:
+            print("I was unable to solve this :(")
+
+    
+        # print(FQ_caeser(text))
     # plot_freq_vals(text)
